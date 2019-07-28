@@ -11,28 +11,51 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.support.IteratorItemReader;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 @EnableBatchProcessing
+@Log4j2
 @SpringBootApplication
 public class PhotoCatalogApplication {
+
+	@Bean
+	JdbcTemplate jdbcTemplate(DataSource dataSource) {
+		return new JdbcTemplate(dataSource);
+	}
+
 	public static void main(String[] args) {
 		SpringApplication.run(PhotoCatalogApplication.class, args);
+	}
+
+	@Bean
+	ApplicationRunner applicationRunner(JdbcTemplate jdbcTemplate) {
+		return args -> {
+			var data = jdbcTemplate.query("select * from orders", (RowMapper<Map<String, Object>>) (resultSet, i) -> Map.of("name", resultSet.getString("name"), "id", resultSet.getLong("id")));
+			data.forEach(row -> log.info(row.get("name") + ":" + row.get("id")));
+		};
 	}
 }
 
@@ -49,8 +72,8 @@ class PhotoCatalogJobConfiguration {
 		list.forEach(log::info);
 	};
 
-	@SneakyThrows
 	@Bean
+	@SneakyThrows
 	ItemReader<Path> itemReader() {
 		var file = new File("/home/jlong/Downloads/photo-catalog");
 		var stream = Files.walk(file.toPath());
