@@ -49,14 +49,6 @@ public class PhotoCatalogApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(PhotoCatalogApplication.class, args);
 	}
-
-	@Bean
-	ApplicationRunner applicationRunner(JdbcTemplate jdbcTemplate) {
-		return args -> {
-			var data = jdbcTemplate.query("select * from orders", (RowMapper<Map<String, Object>>) (resultSet, i) -> Map.of("name", resultSet.getString("name"), "id", resultSet.getLong("id")));
-			data.forEach(row -> log.info(row.get("name") + ":" + row.get("id")));
-		};
-	}
 }
 
 
