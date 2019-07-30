@@ -48,6 +48,10 @@ class ExtractZipFilesStep {
 		return items -> {
 			transactionTemplate.execute(transactionStatus -> {
 				for (var f : items) {
+
+					if (!f.exists())
+						continue;
+
 					var dest = new File(expandedDirectory,
 							f.getName().toLowerCase().replace(" ", "_").replace(".zip", ""));
 					log.debug("unzipping " + f.getAbsolutePath() + " to " + dest.getAbsolutePath() + '.');
