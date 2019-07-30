@@ -22,7 +22,7 @@ import java.util.function.Function;
 @Log4j2
 @Configuration
 @RequiredArgsConstructor
-class ExpandZipsIfRequiredStep {
+class IndexInitialFilesStep {
 
 	private final JdbcTemplate template;
 
@@ -36,8 +36,12 @@ class ExpandZipsIfRequiredStep {
 
 	@Bean
 	Step initialFilesIngestStep() {
-		return this.stepFactory.get("initialFilesIngestStep").<Path, File>chunk(1000).reader(this.itemReader())
-				.processor((Function<Path, File>) Path::toFile).writer(this.itemWriter()).build();
+		return this.stepFactory.get("initialFilesIngestStep")//
+				.<Path, File>chunk(1000)//
+				.reader(this.itemReader())//
+				.processor((Function<Path, File>) Path::toFile)//
+				.writer(this.itemWriter())//
+				.build();
 	}
 
 	@Bean
@@ -49,12 +53,11 @@ class ExpandZipsIfRequiredStep {
 
 	@Bean
 	ItemWriter<File> itemWriter() {
-		return items -> transactionTemplate.execute((TransactionCallback<ItemWriter<File>>) transactionStatus -> {
+		return items -> this.transactionTemplate.execute((TransactionCallback<ItemWriter<File>>) transactionStatus -> {
 			items.stream().map(fileService::save).forEach(id -> {
-				log.info("the id of the save result is " + id);
-				template.update(
-						"insert into initial_ingest_files(file_id) values(?) ON CONFLICT ON CONSTRAINT file_id_constraint DO NOTHING",
-						id);
+				log.debug("the id of the save result is " + id);
+				this.template.update(" INSERT INTO initial_ingest_files(file_id) VALUES (?) "
+						+ " ON CONFLICT ON CONSTRAINT file_id_constraint DO NOTHING", id);
 			});
 			return null;
 		});

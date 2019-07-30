@@ -17,13 +17,16 @@ class PhotoCatalogJobConfiguration {
 
 	private final JobBuilderFactory jobFactory;
 
-	private final ExpandZipsIfRequiredStep step1;
+	private final IndexInitialFilesStep step1;
+
+	private final ExtractZipFilesStep step2;
 
 	@Bean
 	Job job() {
 		return this.jobFactory//
 				.get("photo-catalog-job-" + UUID.randomUUID().toString())//
 				.start(this.step1.initialFilesIngestStep())//
+				.next(this.step2.extractZipsStep())//
 				.incrementer(new RunIdIncrementer())//
 				.build();
 	}

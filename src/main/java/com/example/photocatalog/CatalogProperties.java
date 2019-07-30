@@ -15,6 +15,8 @@ class CatalogProperties {
 
 	private File sourceDirectory;
 
+	private File expandedDirectory;
+
 	private File stagingDirectory;
 
 }

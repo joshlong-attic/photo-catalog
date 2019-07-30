@@ -1,6 +1,7 @@
 package com.example.photocatalog;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -10,6 +11,7 @@ import java.io.File;
 import java.sql.Types;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
 class FileService {
 
@@ -19,6 +21,7 @@ class FileService {
 			+ " ON CONFLICT ON CONSTRAINT path_constraint DO UPDATE SET name=EXCLUDED.path RETURNING id ";
 
 	public Number save(File file) {
+		log.debug("trying to write " + file.getAbsolutePath() + " to the files table");
 		var psc = new PreparedStatementCreatorFactory(this.insertFileSql, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR,
 				Types.BOOLEAN, Types.BIGINT, Types.DATE);
 		psc.setGeneratedKeysColumnNames("id");
